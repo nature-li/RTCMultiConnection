@@ -158,6 +158,10 @@
     function connectSocket(connectCallback) {
         connection.socketAutoReConnect = true;
 
+        /**
+         * 2019-03-25
+         * 判断 connection.socket 是否已连接
+         */
         if (connection.socket) { // todo: check here readySate/etc. to make sure socket is still opened
             if (connectCallback) {
                 connectCallback(connection.socket);
@@ -165,6 +169,10 @@
             return;
         }
 
+        /**
+         * 2019-03-25
+         * 经 debug 确认：SocketConnection === SocketConnection.js
+         */
         if (typeof SocketConnection === 'undefined') {
             if (typeof FirebaseConnection !== 'undefined') {
                 window.SocketConnection = FirebaseConnection;
@@ -1634,6 +1642,11 @@
     // eject or leave single user
     connection.disconnectWith = mPeer.disconnectWith;
 
+    /**
+     * 2019-03-25
+     * 1.检测房间是否存在
+     * 2.存在条件: 房间存在 && 房间内有成员
+     */
     // check if room exist on server
     // we will pass roomid to the server and wait for callback (i.e. server's response)
     connection.checkPresence = function(roomid, callback) {
