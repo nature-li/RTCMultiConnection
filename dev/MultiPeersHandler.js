@@ -3,6 +3,7 @@ function MultiPeers(connection) {
 
     var skipPeers = ['getAllParticipants', 'getLength', 'selectFirst', 'streams', 'send', 'forEach'];
     connection.peers = {
+        // 获取 this 中非 skipPeers 成员数量
         getLength: function() {
             var numberOfPeers = 0;
             for (var peer in this) {
@@ -12,6 +13,7 @@ function MultiPeers(connection) {
             }
             return numberOfPeers;
         },
+        // 获取第一个非 skipPeers 成员
         selectFirst: function() {
             var firstPeer;
             for (var peer in this) {
@@ -21,6 +23,7 @@ function MultiPeers(connection) {
             }
             return firstPeer;
         },
+        // 获取所有非 skipPeers 成员列表
         getAllParticipants: function(sender) {
             var allPeers = [];
             for (var peer in this) {
@@ -30,6 +33,7 @@ function MultiPeers(connection) {
             }
             return allPeers;
         },
+        // 针对所有非 skipPeers 调用成员函数
         forEach: function(callbcak) {
             this.getAllParticipants().forEach(function(participant) {
                 callbcak(connection.peers[participant]);
@@ -39,11 +43,13 @@ function MultiPeers(connection) {
             var that = this;
 
             if (!isNull(data.size) && !isNull(data.type)) {
+                // 传输文件
                 if (connection.enableFileSharing) {
                     self.shareFile(data, remoteUserId);
                     return;
                 }
 
+                // TODO: 没看懂
                 if (typeof data !== 'string') {
                     data = JSON.stringify(data);
                 }
@@ -63,6 +69,7 @@ function MultiPeers(connection) {
                 data = JSON.stringify(data);
             }
 
+            // 若指定 remoteUserId, 则定向发送数据
             if (remoteUserId) {
                 var remoteUser = connection.peers[remoteUserId];
                 if (remoteUser) {
@@ -75,6 +82,7 @@ function MultiPeers(connection) {
                         return;
                     }
 
+                    // 向 remoteUser 的所有 channel 发送数据
                     remoteUser.channels.forEach(function(channel) {
                         channel.send(data);
                     });
@@ -82,6 +90,7 @@ function MultiPeers(connection) {
                 }
             }
 
+            // 向所有成员的所有 channel 发送数据
             this.getAllParticipants().forEach(function(participant) {
                 if (!that[participant].channels.length) {
                     connection.peers[participant].createDataChannel();
@@ -227,6 +236,7 @@ function MultiPeers(connection) {
 
         userPreferences = connection.setUserPreferences(userPreferences, remoteUserId);
         var localConfig = this.getLocalConfig(null, remoteUserId, userPreferences);
+        // 初始化 peers
         connection.peers[remoteUserId] = new PeerInitiator(localConfig);
     };
 
@@ -289,6 +299,7 @@ function MultiPeers(connection) {
         if (message.type && message.sdp) {
             if (message.type == 'answer') {
                 if (connection.peers[remoteUserId]) {
+                    // 调用 setRemoteDescription
                     connection.peers[remoteUserId].addRemoteSdp(message);
                 }
             }
@@ -355,6 +366,7 @@ function MultiPeers(connection) {
     };
 
     function gumCallback(stream, message, remoteUserId) {
+        // 获取 streamsToShare
         var streamsToShare = {};
         connection.attachStreams.forEach(function(stream) {
             streamsToShare[stream.streamid] = {
@@ -365,6 +377,7 @@ function MultiPeers(connection) {
         });
         message.userPreferences.streamsToShare = streamsToShare;
 
+        // 调用 onNegotiationNeeded(本函数在 connection 初始化时被重写了)
         self.onNegotiationNeeded({
             readyForOffer: true,
             userPreferences: message.userPreferences
@@ -375,6 +388,7 @@ function MultiPeers(connection) {
     this.onRemovingRemoteMedia = function(stream, remoteUserId) {};
     this.onGettingLocalMedia = function(localStream) {};
     this.onLocalMediaError = function(error, constraints) {
+        // 触发回调函数
         connection.onMediaError(error, constraints);
     };
 
@@ -391,6 +405,7 @@ function MultiPeers(connection) {
         };
     }
 
+    // TODO: 2019-03-25 太复杂，先略过
     this.shareFile = function(file, remoteUserId) {
         initFileBufferReader();
 
@@ -420,29 +435,35 @@ function MultiPeers(connection) {
     }
 
     this.onDataChannelMessage = function(message, remoteUserId) {
+        // 最终触发 connection 的 onmessage 函数
         textReceiver.receive(JSON.parse(message), remoteUserId, connection.peers[remoteUserId] ? connection.peers[remoteUserId].extra : {});
     };
 
     this.onDataChannelClosed = function(event, remoteUserId) {
         event.userid = remoteUserId;
         event.extra = connection.peers[remoteUserId] ? connection.peers[remoteUserId].extra : {};
+        // 调用回调函数
         connection.onclose(event);
     };
 
     this.onDataChannelError = function(error, remoteUserId) {
         error.userid = remoteUserId;
         event.extra = connection.peers[remoteUserId] ? connection.peers[remoteUserId].extra : {};
+        // 调用回调函数
         connection.onerror(error);
     };
 
     this.onDataChannelOpened = function(channel, remoteUserId) {
+        // channels 列表中只保存一个成员
         // keep last channel only; we are not expecting parallel/channels channels
         if (connection.peers[remoteUserId].channels.length) {
             connection.peers[remoteUserId].channels = [channel];
             return;
         }
 
+        // 保存 channel
         connection.peers[remoteUserId].channels.push(channel);
+        // 调用回调函数
         connection.onopen({
             userid: remoteUserId,
             extra: connection.peers[remoteUserId] ? connection.peers[remoteUserId].extra : {},
@@ -450,6 +471,7 @@ function MultiPeers(connection) {
         });
     };
 
+    // 调用 connection 的 onPeerStateChanged 函数
     this.onPeerStateChanged = function(state) {
         connection.onPeerStateChanged(state);
     };
@@ -457,6 +479,7 @@ function MultiPeers(connection) {
     this.onNegotiationStarted = function(remoteUserId, states) {};
     this.onNegotiationCompleted = function(remoteUserId, states) {};
 
+    // 获取远程 streams
     this.getRemoteStreams = function(remoteUserId) {
         remoteUserId = remoteUserId || connection.peers.getAllParticipants()[0];
         return connection.peers[remoteUserId] ? connection.peers[remoteUserId].streams : [];
