@@ -14,18 +14,22 @@
     mPeer.onGettingLocalMedia = function(stream, callback) {
         callback = callback || function() {};
 
+        // 同样的数据不用 attach 二遍
         if (preventDuplicateOnStreamEvents[stream.streamid]) {
             callback();
             return;
         }
         preventDuplicateOnStreamEvents[stream.streamid] = true;
 
+        // 本地视频
         try {
             stream.type = 'local';
         } catch (e) {}
 
+        // 设置 stream end 处事函数
         connection.setStreamEndHandler(stream);
 
+        // 创建一个 audio 或 video DOM 元素
         getRMCMediaElement(stream, function(mediaElement) {
             mediaElement.id = stream.streamid;
             mediaElement.muted = true;
@@ -51,8 +55,9 @@
 
             try {
                 setHarkEvents(connection, connection.streamEvents[stream.streamid]);
+                // 监听 mute 事件
                 setMuteHandlers(connection, connection.streamEvents[stream.streamid]);
-
+                // 调用默认的或用户预设的 onstream 函数
                 connection.onstream(connection.streamEvents[stream.streamid]);
             } catch (e) {
                 //
@@ -280,6 +285,7 @@
             return;
         }
 
+        // 构建 eventObject
         var eventObject = {
             userid: remoteUserId,
             extra: connection.peers[remoteUserId] ? connection.peers[remoteUserId].extra : {}
@@ -289,20 +295,25 @@
             eventObject.extra = connection.peersBackup[eventObject.userid].extra;
         }
 
+        // 调用用户预设置的回调函数
         connection.onleave(eventObject);
 
         if (!!connection.peers[remoteUserId]) {
+            // 停掉 stream
             connection.peers[remoteUserId].streams.forEach(function(stream) {
                 stream.stop();
             });
 
+            // 关闭 RTCPeerConnection
             var peer = connection.peers[remoteUserId].peer;
+            // iceConnectionState 是 WebRTC 定义的原生变量
             if (peer && peer.iceConnectionState !== 'closed') {
                 try {
                     peer.close();
                 } catch (e) {}
             }
 
+            // 清掉内存空间
             if (connection.peers[remoteUserId]) {
                 connection.peers[remoteUserId].peer = null;
                 delete connection.peers[remoteUserId];
@@ -1020,12 +1031,15 @@
             return;
         }
 
+        // 纯数据不用添加视频或音频数据
         if (isData(session)) {
             connection.renegotiate(remoteUserId);
             return;
         }
 
+        // 添加音频、视频或录屏数据
         if (session.audio || session.video || session.screen) {
+            // 录制屏幕
             if (session.screen) {
                 if (DetectRTC.browser.name === 'Edge') {
                     navigator.getDisplayMedia({
@@ -1076,6 +1090,7 @@
                     });
                 }
             } else if (session.audio || session.video) {
+                // 采样音频或视频数据
                 connection.invokeGetUserMedia(null, gumCallback);
             }
         }
@@ -1090,15 +1105,18 @@
     };
 
     connection.invokeGetUserMedia = function(localMediaConstraints, callback, session) {
+        // session 用来决定采样音频还是视频数据
         if (!session) {
             session = connection.session;
         }
 
+        // getUserMedia() 参数
         if (!localMediaConstraints) {
             localMediaConstraints = connection.mediaConstraints;
         }
 
         getUserMediaHandler({
+            // 这里的 stream 是 getUserMeida 回调函数的 stream
             onGettingLocalMedia: function(stream) {
                 var videoConstraints = localMediaConstraints.video;
                 if (videoConstraints) {
@@ -1109,6 +1127,7 @@
                     }
                 }
 
+                // 判断获取 stream 类别: video 或 audio
                 if (!stream.isScreen) {
                     stream.isVideo = !!getTracks(stream, 'video').length;
                     stream.isAudio = !stream.isVideo && getTracks(stream, 'audio').length;
@@ -1120,6 +1139,7 @@
                     }
                 });
             },
+            // 获取音/视频数据失败回调函数, 这里的 constraints 就是下面的 localMediaConstraints
             onLocalMediaError: function(error, constraints) {
                 mPeer.onLocalMediaError(error, constraints);
             },
@@ -1301,6 +1321,7 @@
             streamEndedEvent = 'inactive';
         }
 
+        // 我操！stream 还可以添加监听函数
         stream.addEventListener(streamEndedEvent, function() {
             if (stream.idInstance) {
                 currentUserMediaRequest.remove(stream.idInstance);

@@ -25,6 +25,7 @@ var RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate;
 var MediaStreamTrack = window.MediaStreamTrack;
 
 function PeerInitiator(config) {
+    // 统一不同浏览器之间的函数定义
     if (typeof window.RTCPeerConnection !== 'undefined') {
         RTCPeerConnection = window.RTCPeerConnection;
     } else if (typeof mozRTCPeerConnection !== 'undefined') {
@@ -70,6 +71,10 @@ function PeerInitiator(config) {
         OfferToReceiveVideo: true
     });
 
+    /**
+     * 最后被设置了 this.peer = peer
+     * peer 即 RTCPeerConnection，代表2台计算机之间原生的 WebRTC 连接
+     */
     var peer;
 
     var renegotiatingPeer = !!config.renegotiatingPeer;

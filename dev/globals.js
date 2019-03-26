@@ -101,11 +101,13 @@ function getRandomString() {
 // todo: add API documentation for connection.autoCreateMediaElement
 
 function getRMCMediaElement(stream, callback, connection) {
+    // 是否自动创建一个 audio/video 标签
     if (!connection.autoCreateMediaElement) {
         callback({});
         return;
     }
 
+    // 是否只创建 audio
     var isAudioOnly = false;
     if (!getTracks(stream, 'video').length && !stream.isVideo && !stream.isScreen) {
         isAudioOnly = true;
@@ -117,6 +119,7 @@ function getRMCMediaElement(stream, callback, connection) {
         }
     }
 
+    // 创建相应的标签 audio 或 vedio
     var mediaElement = document.createElement(isAudioOnly ? 'audio' : 'video');
 
     mediaElement.srcObject = stream;

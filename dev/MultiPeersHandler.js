@@ -112,6 +112,9 @@ function MultiPeers(connection) {
 
     this.uuid = connection.userid;
 
+    /**
+     * 返回值除 rtcMultiConnection 之外，均来自入口的3个参数
+     */
     this.getLocalConfig = function(remoteSdp, remoteUserId, userPreferences) {
         if (!userPreferences) {
             userPreferences = {};
@@ -194,6 +197,7 @@ function MultiPeers(connection) {
                 self.onRemovingRemoteMedia(stream, remoteUserId);
             },
             onPeerStateChanged: function(states) {
+                // here -> MultiPeersHandler -> connection
                 self.onPeerStateChanged(states);
 
                 if (states.iceConnectionState === 'new') {
@@ -386,6 +390,7 @@ function MultiPeers(connection) {
 
     this.onGettingRemoteMedia = function(stream, remoteUserId) {};
     this.onRemovingRemoteMedia = function(stream, remoteUserId) {};
+    // 这个函数在 RTCMultiConnection 中被重写了
     this.onGettingLocalMedia = function(localStream) {};
     this.onLocalMediaError = function(error, constraints) {
         // 触发回调函数
