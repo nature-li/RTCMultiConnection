@@ -145,6 +145,7 @@
         });
     };
 
+    // 用户离开
     function onUserLeft(remoteUserId) {
         connection.deletePeer(remoteUserId);
     }
@@ -284,6 +285,7 @@
     // this object is never cleared so you can always access extra-data even if a user left
     connection.peersBackup = {};
 
+    // 删除 RTCPeerConnection 和与之相关的数据
     connection.deletePeer = function(remoteUserId) {
         if (!remoteUserId || !connection.peers[remoteUserId]) {
             return;
@@ -981,6 +983,7 @@
         }, 2000);
     };
 
+    // 默认操作为移除自动创建的 mediaEvent
     connection.onstreamended = function(e) {
         if (!e.mediaElement) {
             e.mediaElement = document.getElementById(e.streamid);
@@ -1405,6 +1408,7 @@
     connection.token = getRandomString;
 
     connection.onNewParticipant = function(participantId, userPreferences) {
+        // 这个函数必须调用，其它用户才能加入进来
         connection.acceptParticipationRequest(participantId, userPreferences);
     };
 

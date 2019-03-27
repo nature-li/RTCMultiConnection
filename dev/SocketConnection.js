@@ -120,31 +120,38 @@ function SocketConnection(connection, connectCallback) {
             updateExtraBackup(message.sender, message.extra);
         }
 
-        // TODO: 复杂
+        // 与 stream 有关的操作
         if (message.message.streamSyncNeeded && connection.peers[message.sender]) {
+            // 这里的 streamid 应该是对端的 stream
             var stream = connection.streamEvents[message.message.streamid];
             if (!stream || !stream.stream) {
                 return;
             }
 
+            // action 可以是 mute、unmute 或其它可以监听的事件
             var action = message.message.action;
 
             if (action === 'ended' || action === 'inactive' || action === 'stream-removed') {
                 if (connection.peersBackup[stream.userid]) {
                     stream.extra = connection.peersBackup[stream.userid].extra;
                 }
+                // 调用回调函数
                 connection.onstreamended(stream);
                 return;
             }
 
+            // type 可以是 audio、video 或 both
             var type = message.message.type != 'both' ? message.message.type : null;
 
+            // 调用对端同步过来的方法
+            // 这里的意思是，本端 stream 执行了什么操作，也会同步到对端的 stream 中去
             if (typeof stream.stream[action] == 'function') {
                 stream.stream[action](type);
             }
             return;
         }
 
+        // 没发现什么地方设置了这个参数 dropPeerConnection
         if (message.message === 'dropPeerConnection') {
             connection.deletePeer(message.sender);
             return;
@@ -157,6 +164,7 @@ function SocketConnection(connection, connectCallback) {
             }
 
             message.message.allParticipants.forEach(function(participant) {
+                // createNewPeer 和 renegotiatePeer 分别是2个成员函数
                 mPeer[!connection.peers[participant] ? 'createNewPeer' : 'renegotiatePeer'](participant, {
                     localPeerSdpConstraints: {
                         OfferToReceiveAudio: connection.sdpConstraints.mandatory.OfferToReceiveAudio,
@@ -174,9 +182,13 @@ function SocketConnection(connection, connectCallback) {
         }
 
         if (message.message.newParticipant) {
+            // 新加成员不能是自己
             if (message.message.newParticipant == connection.userid) return;
+            // 新加成员已经存在了
             if (!!connection.peers[message.message.newParticipant]) return;
 
+            // 这个函数调用跟上面的函数调用一模一样啊
+            // 只不过 userPreferences 是通过  message 传过来的
             mPeer.createNewPeer(message.message.newParticipant, message.message.userPreferences || {
                 localPeerSdpConstraints: {
                     OfferToReceiveAudio: connection.sdpConstraints.mandatory.OfferToReceiveAudio,
@@ -198,6 +210,7 @@ function SocketConnection(connection, connectCallback) {
             }
 
             if (connection.waitingForLocalMedia) {
+                // 在没有准备好的情况下，这是一个循环调用，直至 connection.attachStreams.length > 0
                 // if someone is waiting to join you
                 // make sure that we've local media before making a handshake
                 setTimeout(function() {
@@ -207,7 +220,9 @@ function SocketConnection(connection, connectCallback) {
             }
         }
 
+        // 这个应该是成员加入请求
         if (message.message.newParticipationRequest && message.sender !== connection.userid) {
+            // 如果已经存在了，直接删除
             if (connection.peers[message.sender]) {
                 connection.deletePeer(message.sender);
             }
@@ -230,10 +245,12 @@ function SocketConnection(connection, connectCallback) {
                 successCallback: function() {}
             };
 
+            // 调用回调函数
             connection.onNewParticipant(message.sender, userPreferences);
             return;
         }
 
+        // 什么情况下会 change UUID?
         if (message.message.changedUUID) {
             if (connection.peers[message.message.oldUUID]) {
                 connection.peers[message.message.newUUID] = connection.peers[message.message.oldUUID];

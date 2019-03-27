@@ -217,6 +217,7 @@ function MultiPeers(connection) {
     };
 
     this.createNewPeer = function(remoteUserId, userPreferences) {
+        // 人数过多，超过上限
         if (connection.maxParticipantsAllowed <= connection.getAllParticipants().length) {
             return;
         }
@@ -229,6 +230,7 @@ function MultiPeers(connection) {
             userPreferences.session = connection.session;
         }
 
+        // TODO： 没看懂这里，为什么就变成了 isOneWay = true 了
         if (!userPreferences.isOneWay && !userPreferences.isDataOnly) {
             userPreferences.isOneWay = true;
             this.onNegotiationNeeded({
