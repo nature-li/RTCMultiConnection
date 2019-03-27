@@ -303,6 +303,7 @@ function MultiPeers(connection) {
 
     this.onNegotiationNeeded = function(message, remoteUserId) {};
     this.addNegotiatedMessage = function(message, remoteUserId) {
+        // 与 sdp 相关的操作
         if (message.type && message.sdp) {
             if (message.type == 'answer') {
                 if (connection.peers[remoteUserId]) {
@@ -325,6 +326,7 @@ function MultiPeers(connection) {
             return;
         }
 
+        // 与 candidate 相关的操作
         if (message.candidate) {
             if (connection.peers[remoteUserId]) {
                 connection.peers[remoteUserId].addRemoteCandidate(message);
@@ -336,6 +338,7 @@ function MultiPeers(connection) {
             return;
         }
 
+        // 触发重新协商 stream 操作
         if (message.enableMedia) {
             connection.session = message.userPreferences.session || connection.session;
 
@@ -344,6 +347,7 @@ function MultiPeers(connection) {
             }
 
             if (message.userPreferences.isDataOnly && connection.attachStreams.length) {
+                // 这里是不是一个 bug ?
                 connection.attachStreams.length = [];
             }
 
@@ -363,6 +367,7 @@ function MultiPeers(connection) {
             }, remoteUserId);
         }
 
+        // 对端准备好接收视频数据了
         if (message.readyForOffer) {
             connection.onReadyForOffer(remoteUserId, message.userPreferences);
         }
