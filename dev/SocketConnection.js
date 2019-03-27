@@ -106,6 +106,7 @@ function SocketConnection(connection, connectCallback) {
 
     // 监听 connection.socketMessageEvent 事件的处理函数
     function onMessageEvent(message) {
+        // 自己不会发消息给自己
         if (message.remoteUserId != connection.userid) return;
 
         // 更新 connection.peers 和 connection.peersBackup 数据

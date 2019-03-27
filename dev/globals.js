@@ -10,6 +10,7 @@ if (navigator && navigator.userAgent && navigator.userAgent.indexOf('Crosswalk')
     DetectRTC.browser.name = 'Chrome';
 }
 
+// dispatch 事件
 function fireEvent(obj, eventName, args) {
     if (typeof CustomEvent === 'undefined') {
         return;
@@ -139,6 +140,7 @@ function getRMCMediaElement(stream, callback, connection) {
             streamEndedEvent = 'inactive';
         }
 
+        // 在创建的 DOM 元素上添加监听事件
         mediaElement.addEventListener(streamEndedEvent, function() {
             // fireEvent(stream, streamEndedEvent, stream);
             currentUserMediaRequest.remove(stream.idInstance);

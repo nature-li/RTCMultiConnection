@@ -1474,6 +1474,7 @@
 
     if (typeof StreamsHandler !== 'undefined') {
         StreamsHandler.onSyncNeeded = function(streamid, action, type) {
+            // 这里的 participant 应该是 remoteUserId
             connection.peers.getAllParticipants().forEach(function(participant) {
                 mPeer.onNegotiationNeeded({
                     streamid: streamid,
