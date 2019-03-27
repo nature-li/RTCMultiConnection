@@ -252,6 +252,7 @@ function MultiPeers(connection) {
     };
 
     this.renegotiatePeer = function(remoteUserId, userPreferences, remoteSdp) {
+        // 查找 peer
         if (!connection.peers[remoteUserId]) {
             if (connection.enableLogs) {
                 console.error('Peer (' + remoteUserId + ') does not exist. Renegotiation skipped.');

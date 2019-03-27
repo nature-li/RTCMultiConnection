@@ -77,6 +77,7 @@ function PeerInitiator(config) {
      */
     var peer;
 
+    // 注意这里 renegotiatingPeer
     var renegotiatingPeer = !!config.renegotiatingPeer;
     if (config.remoteSdp) {
         renegotiatingPeer = !!config.remoteSdp.renegotiatingPeer;
@@ -161,11 +162,18 @@ function PeerInitiator(config) {
         };
     }
 
+    // ICE 层收集到的所有网络连接信息，收到信息后应该通过信令服务器转发给对端
     peer.onicecandidate = function(event) {
+        // 本函数会收到每个 candidate, 当 event.candidate 为 null时，表明 candidate 已经收集结束了
+        // 详情参见：https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling
         if (!event.candidate) {
+            // trickle 代表不用等待完全收集、交换完 candidate 后，再交换 sdp
             if (!connection.trickleIce) {
+                // RTCSessionDescription 定义参考：
+                // https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription
                 var localSdp = peer.localDescription;
                 config.onLocalSdp({
+                    // type 值可以为: offer answer pranswer rollback
                     type: localSdp.type,
                     sdp: localSdp.sdp,
                     remotePeerSdpConstraints: config.remotePeerSdpConstraints || false,
@@ -179,7 +187,10 @@ function PeerInitiator(config) {
             return;
         }
 
+        // candidate 全部收集完成后再交换 sdp
+        // 默认 trickle 为 true, 即不会直接返回
         if (!connection.trickleIce) return;
+
         config.onLocalCandidate({
             candidate: event.candidate.candidate,
             sdpMid: event.candidate.sdpMid,

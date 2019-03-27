@@ -124,6 +124,9 @@
         remoteUserId = remoteUserId || message.remoteUserId;
         message = message || '';
 
+        /**
+         * 构建 messageToDeliver
+         */
         // usually a message looks like this
         var messageToDeliver = {
             remoteUserId: remoteUserId,
@@ -136,6 +139,7 @@
             messageToDeliver = message;
         }
 
+        // 确保 socket.io 连接存在后, 托付服务端转发消息
         connectSocket(function() {
             connection.socket.emit(connection.socketMessageEvent, messageToDeliver, callback);
         });
