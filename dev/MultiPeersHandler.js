@@ -308,6 +308,7 @@ function MultiPeers(connection) {
     this.addNegotiatedMessage = function(message, remoteUserId) {
         // 与 sdp 相关的操作
         if (message.type && message.sdp) {
+            // 这里的 answer 和 offer 是 RTCSessionDescription 的只读属性
             if (message.type == 'answer') {
                 if (connection.peers[remoteUserId]) {
                     // 调用 setRemoteDescription
@@ -315,6 +316,7 @@ function MultiPeers(connection) {
                 }
             }
 
+            // 这里的 answer 和 offer 是 RTCSessionDescription 的只读属性
             if (message.type == 'offer') {
                 if (message.renegotiatingPeer) {
                     this.renegotiatePeer(remoteUserId, null, message);

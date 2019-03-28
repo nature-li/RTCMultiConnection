@@ -417,8 +417,8 @@ function PeerInitiator(config) {
         });
     };
 
+    // 猜测意思为: 本端是否 offer 发起者
     var isOfferer = true;
-
     if (config.remoteSdp) {
         isOfferer = false;
     }
@@ -463,6 +463,7 @@ function PeerInitiator(config) {
         }
         defaults.sdpConstraints = setSdpConstraints(sdpConstraints);
         this.addRemoteSdp(config.remoteSdp, function() {
+            // 创建 answer
             createOfferOrAnswer('createAnswer');
         });
     }
@@ -548,6 +549,8 @@ function PeerInitiator(config) {
         }, defaults.sdpConstraints);
     }
 
+    // 用参数来区分是 createOffer 还是 createAnswer
+    // createOffer 和 createAnswer 是 RTCPeerConnection 的方法
     function createOfferOrAnswer(_method) {
         peer[_method](defaults.sdpConstraints).then(function(localSdp) {
             if (DetectRTC.browser.name !== 'Safari') {
@@ -556,6 +559,7 @@ function PeerInitiator(config) {
             peer.setLocalDescription(localSdp).then(function() {
                 if (!connection.trickleIce) return;
 
+                // 与对端交换 sdp 信息
                 config.onLocalSdp({
                     type: localSdp.type,
                     sdp: localSdp.sdp,
@@ -580,6 +584,7 @@ function PeerInitiator(config) {
     }
 
     if (isOfferer) {
+        // 创建 offer
         createOfferOrAnswer('createOffer');
     }
 

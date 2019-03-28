@@ -118,6 +118,10 @@
         delete connection.streamEvents[stream.streamid];
     };
 
+    /**
+     * 需要协商音/视频相关的东西
+     * 1) RTCPeerConnection 中创建 offer/answer 再 setLocalDescription 后会触发此函数的调用
+     */
     mPeer.onNegotiationNeeded = function(message, remoteUserId, callback) {
         callback = callback || function() {};
 
@@ -1890,6 +1894,7 @@
     connection.trickleIce = true;
     connection.version = '@@version';
 
+    // 调用 setLocalDescription 之后，给个回调函数
     connection.onSettingLocalDescription = function(event) {
         if (connection.enableLogs) {
             console.info('Set local description for remote user', event.userid);
