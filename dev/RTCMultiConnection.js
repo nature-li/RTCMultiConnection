@@ -906,6 +906,7 @@
         udp: true
     };
 
+    // 这些都是 RTCDataChannel 的事件
     // EVENTs
     connection.onopen = function(event) {
         if (!!connection.enableLogs) {
@@ -913,24 +914,28 @@
         }
     };
 
+    // 这些都是 RTCDataChannel 的事件
     connection.onclose = function(event) {
         if (!!connection.enableLogs) {
             console.warn('Data connection has been closed between you & ', event.userid);
         }
     };
 
+    // 这些都是 RTCDataChannel 的事件
     connection.onerror = function(error) {
         if (!!connection.enableLogs) {
             console.error(error.userid, 'data-error', error);
         }
     };
 
+    // 这些都是 RTCDataChannel 的事件
     connection.onmessage = function(event) {
         if (!!connection.enableLogs) {
             console.debug('data-message', event.userid, event.data);
         }
     };
 
+    // 用 RTCDataChannel 发送事件
     connection.send = function(data, remoteUserId) {
         connection.peers.send(data, remoteUserId);
     };
