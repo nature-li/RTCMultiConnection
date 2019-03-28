@@ -70,6 +70,7 @@ function PeerInitiator(config) {
         this.connectionDescription = config.remoteSdp.connectionDescription;
     }
 
+    // TODO: 不明白这里的意思
     var allRemoteStreams = {};
 
     defaults.sdpConstraints = setSdpConstraints({
@@ -290,17 +291,21 @@ function PeerInitiator(config) {
     var streamObject;
     var dontDuplicate = {};
 
+    // event 为 RTCTrackEvent 类型
     peer.ontrack = function(event) {
         if (!event || event.type !== 'track') return;
 
+        // 获取列表中最后一个 stream
         event.stream = event.streams[event.streams.length - 1];
 
         if (!event.stream.id) {
             event.stream.id = event.track.id;
         }
 
+        // 避免 onended 添加2次
         if (dontDuplicate[event.stream.id] && DetectRTC.browser.name !== 'Safari') {
             if (event.track) {
+                // 添加 RTCTrackEvent 时，就添加好 remove 方法
                 event.track.onended = function() { // event.track.onmute = 
                     peer && peer.onremovestream(event);
                 };
@@ -318,6 +323,8 @@ function PeerInitiator(config) {
         }
 
         var streamToShare = streamsToShare[event.stream.id];
+
+        // isAudio isVideo isScreen 是在 MediaStream 基础上作者新添加几个属性
         if (streamToShare) {
             event.stream.isAudio = streamToShare.isAudio;
             event.stream.isVideo = streamToShare.isVideo;
@@ -328,17 +335,22 @@ function PeerInitiator(config) {
             event.stream.isScreen = false;
         }
 
+        // streamid 也是新添加的属性
         event.stream.streamid = event.stream.id;
 
         allRemoteStreams[event.stream.id] = event.stream;
+        // 不懂这个回调函数作用
         config.onRemoteStream(event.stream);
 
+        // 添加 RTCTrackEvent 时，就添加好 remove 方法
         event.stream.getTracks().forEach(function(track) {
             track.onended = function() { // track.onmute = 
                 peer && peer.onremovestream(event);
             };
         });
 
+        // MediaStream 的原生事件 onremovetrack
+        // 当 MediaStreamTrack 被 remove 时触发
         event.stream.onremovetrack = function() {
             peer && peer.onremovestream(event);
         };
