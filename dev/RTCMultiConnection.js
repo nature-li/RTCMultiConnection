@@ -439,6 +439,8 @@
                     return;
                 }
 
+                // 加入 room 成功后，再发送 newParticipationRequest 消息
+                // 然后才能触发对端的 onNewParticipant 函数
                 mPeer.onNegotiationNeeded(connectionDescription);
             }
 
@@ -447,6 +449,7 @@
                     console.warn('isRoomJoined: ', error, ' roomid: ', connection.sessionid);
                 }
 
+                // 感觉作者的 disabled 操作实在是太骚了
                 // [disabled] retry after 3 seconds
                 false && setTimeout(function() {
                     joinRoom(connectionDescription, cb);
@@ -1490,6 +1493,8 @@
         };
     }
 
+    // 只连接 socket
+    // 其实好多监听事件可以在连接之后添加了
     connection.connectSocket = function(callback) {
         connectSocket(callback);
     };
