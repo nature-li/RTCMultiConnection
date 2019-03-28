@@ -36,6 +36,7 @@ var TranslationHandler = (function() {
                     console.error(response);
                 };
 
+                // 这个翻译器用不到，而且引用了 google 的 api，国内无法访问
                 var source = 'https://www.googleapis.com/language/translate/v2?key=' + connection.googKey + '&target=' + (connection.language || 'en-US') + '&callback=window.' + randomNumber + '&q=' + sourceText;
                 newScript.src = source;
                 document.getElementsByTagName('head')[0].appendChild(newScript);

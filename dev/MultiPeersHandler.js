@@ -1,7 +1,10 @@
 function MultiPeers(connection) {
     var self = this;
 
+    // 除 streams 外，其它几个都是成员函数
     var skipPeers = ['getAllParticipants', 'getLength', 'selectFirst', 'streams', 'send', 'forEach'];
+
+    // 所有已连接的 RTCPeerConnection
     connection.peers = {
         // 获取 this 中非 skipPeers 成员数量
         getLength: function() {

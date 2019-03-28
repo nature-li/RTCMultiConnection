@@ -19,6 +19,7 @@ function enableV2Api(connection) {
     // support "connection.streams"
     connection.streams = {};
     (function looper() {
+        // streams 已经不再使用，请参考 streamEvents
         connection.streams = connection.streamEvents;
 
         Object.keys(connection.streamEvents).forEach(function(sid) {

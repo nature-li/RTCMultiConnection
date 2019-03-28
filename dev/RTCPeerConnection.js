@@ -24,6 +24,9 @@ var RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSession
 var RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate;
 var MediaStreamTrack = window.MediaStreamTrack;
 
+
+// 这个函数(类)的核心成员是 this.peer，即 RTCPeerConnection
+// 再加上一些额外的数据
 function PeerInitiator(config) {
     // 统一不同浏览器之间的函数定义
     if (typeof window.RTCPeerConnection !== 'undefined') {
@@ -42,9 +45,12 @@ function PeerInitiator(config) {
         throw 'WebRTC 1.0 (RTCPeerConnection) API are NOT available in this browser.';
     }
 
+    // 获取本端 connection
     var connection = config.rtcMultiConnection;
 
+    // 设置 this 成员
     this.extra = config.remoteSdp ? config.remoteSdp.extra : connection.extra;
+    // 这里的 userid 其实是 remoteUserId
     this.userid = config.userid;
     this.streams = [];
     this.channels = config.channels || [];
@@ -155,7 +161,11 @@ function PeerInitiator(config) {
     if (!peer.getLocalStreams && peer.getSenders) {
         peer.getLocalStreams = function() {
             var stream = new MediaStream();
+            // getSenders(）是 RTCPeerConnection 的原生函数
+            // 这个函数返回的是 [RTCRtpSender]
+            // 每一个 RTCRtpSender有一个 track 可读属性
             peer.getSenders().forEach(function(sender) {
+                // addTrack 为 MediaStream 的原生函数
                 stream.addTrack(sender.track);
             });
             return [stream];
@@ -228,7 +238,12 @@ function PeerInitiator(config) {
         }
     });
 
+    // 当任一网络环境发生变化时，调用此函数
+    // 可以通过 RTCPeerConnection.connectionState 查看最新网络状态
+    // setLocalDescription 或 setRemoteDescription 调用时，会触发 onsignalingstatechange 事件
+    // 可以通过 RTCPeerConnection.signalingState 查看最新状态
     peer.oniceconnectionstatechange = peer.onsignalingstatechange = function() {
+        // 获取 remoteUserId 的 extra 数据
         var extra = self.extra;
         if (connection.peers[self.userid]) {
             extra = connection.peers[self.userid].extra || extra;
@@ -238,6 +253,7 @@ function PeerInitiator(config) {
             return;
         }
 
+        // connection.onPeerStateChanged 的默认操作是打印一条日志
         config.onPeerStateChanged({
             iceConnectionState: peer.iceConnectionState,
             iceGatheringState: peer.iceGatheringState,
@@ -246,6 +262,8 @@ function PeerInitiator(config) {
             userid: self.userid
         });
 
+        // iceConnectionState 为 RTCPeerConnection 的属性
+        // 其值为字符串，可以是: new, checking, connected, completed, failed, disconnected, closed
         if (peer && peer.iceConnectionState && peer.iceConnectionState.search(/closed|failed/gi) !== -1 && self.streams instanceof Array) {
             self.streams.forEach(function(stream) {
                 var streamEvent = connection.streamEvents[stream.id] || {
@@ -254,6 +272,7 @@ function PeerInitiator(config) {
                     type: 'remote'
                 };
 
+                // 调用回调函数
                 connection.onstreamended(streamEvent);
             });
         }

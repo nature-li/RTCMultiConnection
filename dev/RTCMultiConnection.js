@@ -1309,6 +1309,7 @@
         });
     };
 
+    // 与对端重新协商有关音视频的协议，如编解码等
     connection.renegotiate = function(remoteUserId) {
         if (remoteUserId) {
             mPeer.renegotiatePeer(remoteUserId);
@@ -1544,6 +1545,8 @@
 
     var skipStreams = ['selectFirst', 'selectAll', 'forEach'];
 
+    // 这个 object 存储了所有 local 和 remote 的 streams
+    // 使用方法见这里：https://www.rtcmulticonnection.org/docs/streamEvents/
     connection.streamEvents = {
         selectFirst: function(options) {
             return connection.streamEvents.selectAll(options)[0];
@@ -1869,6 +1872,7 @@
     }
 
     connection.onUserIdAlreadyTaken = function(useridAlreadyTaken, yourNewUserId) {
+        // 注意这里先是调用了2个函数: close && closeSocket
         // via #683
         connection.close();
         connection.closeSocket();
@@ -1892,6 +1896,7 @@
         }
     };
 
+    // getUserMedia 获取屏蔽视频前调用此函数
     connection.resetScreen = function() {
         sourceId = null;
         if (DetectRTC && DetectRTC.screen) {
