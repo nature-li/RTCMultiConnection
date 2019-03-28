@@ -393,6 +393,8 @@ function PeerInitiator(config) {
     }
 
     this.createDataChannel = function() {
+        // 这里是原生的 createDataChannel 函数
+        // 用法详情见这里：https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel
         var channel = peer.createDataChannel('sctp', {});
         setChannelEvents(channel);
     };
@@ -438,6 +440,7 @@ function PeerInitiator(config) {
         // force ArrayBuffer in Firefox; which uses "Blob" by default.
         channel.binaryType = 'arraybuffer';
 
+        // RTCDataChannel 可以监听各种事件
         channel.onmessage = function(event) {
             config.onDataChannelMessage(event.data);
         };
